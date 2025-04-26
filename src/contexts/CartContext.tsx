@@ -13,10 +13,12 @@ type CartItem = {
 
 interface CartContextType {
   cart: CartItem[];
+  wishlist: Omit<CartItem, 'quantity'>[];
   addToCart: (product: Omit<CartItem, 'quantity'>, quantity?: number) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
+  toggleWishlist: (product: Omit<CartItem, 'quantity'>) => void;
   cartTotal: number;
   cartCount: number;
 }
@@ -29,6 +31,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
+  const [wishlist, setWishlist] = useState<Omit<CartItem, 'quantity'>[]>(() => {
+    const savedWishlist = localStorage.getItem('healingMiraclesWishlist');
+    return savedWishlist ? JSON.parse(savedWishlist) : [];
+  });
+
   // Calculate totals
   const cartTotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
   const cartCount = cart.reduce((count, item) => count + item.quantity, 0);
@@ -38,14 +45,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('healingMiraclesCart', JSON.stringify(cart));
   }, [cart]);
 
-  // Add item to cart
+  // Save wishlist to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('healingMiraclesWishlist', JSON.stringify(wishlist));
+  }, [wishlist]);
+
   const addToCart = (product: Omit<CartItem, 'quantity'>, quantity = 1) => {
     setCart(prevCart => {
-      // Check if item already exists in cart
       const existingItemIndex = prevCart.findIndex(item => item.id === product.id);
       
       if (existingItemIndex !== -1) {
-        // Update quantity of existing item
         const updatedCart = [...prevCart];
         updatedCart[existingItemIndex].quantity += quantity;
         
@@ -57,7 +66,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         return updatedCart;
       } else {
-        // Add new item to cart
         toast({
           title: "Added to Cart",
           description: `${product.name} has been added to your cart.`,
@@ -69,7 +77,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  // Remove item from cart
   const removeFromCart = (productId: string) => {
     setCart(prevCart => {
       const updatedCart = prevCart.filter(item => item.id !== productId);
@@ -84,7 +91,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  // Update item quantity
   const updateQuantity = (productId: string, quantity: number) => {
     if (quantity < 1) {
       removeFromCart(productId);
@@ -100,7 +106,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
-  // Clear cart
   const clearCart = () => {
     setCart([]);
     toast({
@@ -110,13 +115,39 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  const toggleWishlist = (product: Omit<CartItem, 'quantity'>) => {
+    setWishlist(prevWishlist => {
+      const exists = prevWishlist.some(item => item.id === product.id);
+      
+      if (exists) {
+        toast({
+          title: "Removed from Wishlist",
+          description: `${product.name} has been removed from your wishlist.`,
+          duration: 2000,
+        });
+        
+        return prevWishlist.filter(item => item.id !== product.id);
+      } else {
+        toast({
+          title: "Added to Wishlist",
+          description: `${product.name} has been added to your wishlist.`,
+          duration: 2000,
+        });
+        
+        return [...prevWishlist, product];
+      }
+    });
+  };
+
   return (
     <CartContext.Provider value={{ 
       cart, 
+      wishlist,
       addToCart, 
       removeFromCart, 
       updateQuantity, 
       clearCart,
+      toggleWishlist,
       cartTotal,
       cartCount
     }}>
