@@ -17,6 +17,9 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
+import OrdersPage from "./pages/OrdersPage";
+import OrderTrackingPage from "./pages/OrderTrackingPage";
+import OrderCancelPage from "./pages/OrderCancelPage";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +41,9 @@ const App = () => (
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/account" element={<Account />} />
+                <Route path="/orders" element={<OrdersPage />} />
+                <Route path="/orders/track/:trackingNumber" element={<OrderTrackingPage />} />
+                <Route path="/orders/cancel/:orderId" element={<OrderCancelPage />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
