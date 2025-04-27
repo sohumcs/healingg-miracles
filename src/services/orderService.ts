@@ -33,11 +33,19 @@ export async function createOrder(orderData: any) {
     if (itemsError) throw itemsError;
 
     // Sync to Google Sheets
-    const { error } = await supabase.functions.invoke('sync-orders', {
-      body: { order: { ...order, items: orderItems } }
+    const supabaseUrl = supabase.supabaseUrl;
+    const response = await fetch(`${supabaseUrl}/functions/v1/sync-orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabase.supabaseKey}`
+      },
+      body: JSON.stringify({ order: { ...order, items: orderItems } })
     });
 
-    if (error) throw error;
+    if (!response.ok) {
+      throw new Error(`Error syncing order: ${response.status}`);
+    }
     
     return order;
   } catch (error) {
@@ -60,10 +68,21 @@ export async function fetchOrders(userId: string) {
     if (dbError) throw dbError;
 
     // Sync with Google Sheets to get latest status
-    const { data, error } = await supabase.functions.invoke('sync-orders');
-    
-    if (error) throw error;
+    const supabaseUrl = supabase.supabaseUrl;
+    const response = await fetch(`${supabaseUrl}/functions/v1/sync-orders`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabase.supabaseKey}`
+      }
+    });
 
+    if (!response.ok) {
+      throw new Error(`Error fetching orders: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
     // Update local orders with latest status from Google Sheets
     const sheetsOrders = data.orders;
     const updatedOrders = orders.map(order => {

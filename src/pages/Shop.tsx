@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '@/components/ProductCard';
@@ -23,7 +24,9 @@ const Shop = () => {
     
     // Apply category filter
     if (activeCategory) {
-      filtered = filtered.filter(product => product.category === activeCategory);
+      filtered = filtered.filter(product => 
+        product.category.toLowerCase() === activeCategory.toLowerCase()
+      );
     }
     
     // Apply sorting
@@ -64,6 +67,14 @@ const Shop = () => {
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSortOption(e.target.value);
   };
+
+  useEffect(() => {
+    // Update category from URL if it changes
+    const category = searchParams.get('category');
+    if (category !== activeCategory) {
+      setActiveCategory(category);
+    }
+  }, [searchParams, activeCategory]);
   
   return (
     <div className="min-h-screen pt-24 pb-16">

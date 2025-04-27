@@ -22,6 +22,20 @@ interface ProductCardProps {
 const ProductCard = ({ product, featured = false }: ProductCardProps) => {
   const { addToCart } = useCart();
   
+  // Format the category name for display
+  const getCategoryDisplayName = (category: string) => {
+    switch(category.toLowerCase()) {
+      case 'bath':
+        return 'Bath Salt';
+      case 'gemstone':
+        return 'Gemstone';
+      case 'tealight':
+        return 'Tealight Holder';
+      default:
+        return category;
+    }
+  };
+  
   return (
     <div 
       className={`product-card bg-white rounded-md overflow-hidden ${
@@ -40,11 +54,7 @@ const ProductCard = ({ product, featured = false }: ProductCardProps) => {
         <div className="p-4 space-y-2">
           <div className="flex items-center">
             <span className="text-xs uppercase tracking-wider text-healing-dark/70">
-              {product.category === 'bath' 
-                ? 'Bath Salt' 
-                : product.category === 'gemstone' 
-                  ? 'Gemstone' 
-                  : 'Tealight Holder'}
+              {getCategoryDisplayName(product.category)}
             </span>
             <div className="ml-auto flex items-center">
               <span className="text-sm font-medium text-healing-dark mr-1">
