@@ -1,27 +1,29 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from '@supabase/supabase-js';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req) => {
+export async function handler(req: Request) {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const SHEETS_API_KEY = Deno.env.get('GOOGLE_SHEETS_API_KEY');
-    const SHEET_ID = Deno.env.get('GOOGLE_SHEETS_ORDERS_SHEET_ID');
+    const SHEETS_API_KEY = process.env.GOOGLE_SHEETS_API_KEY;
+    const SHEET_ID = process.env.GOOGLE_SHEETS_ORDERS_SHEET_ID;
 
     if (!SHEETS_API_KEY || !SHEET_ID) {
       throw new Error('Missing required environment variables');
     }
 
+    // If method is POST, add a new order to Google Sheets
     if (req.method === 'POST') {
-      // Add new order to Google Sheets
-      const { order } = await req.json();
+      const requestData = await req.json();
+      const { order } = requestData;
+      
       const values = [
         [
           order.id,
@@ -60,7 +62,7 @@ serve(async (req) => {
         }
       );
     } else {
-      // Get orders from Google Sheets
+      // Get orders from Google Sheets (GET method)
       const response = await fetch(
         `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Orders!A2:G`,
         {
@@ -103,4 +105,8 @@ serve(async (req) => {
       }
     );
   }
-});
+}
+
+// This is the adapter function that Supabase needs
+export const GET = handler;
+export const POST = handler;

@@ -1,10 +1,12 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Lock, CreditCard } from 'lucide-react';
+import { createOrder } from '@/services/orderService';
+import { initiatePayment, verifyPayment } from '@/services/paymentService';
+import { useToast } from '@/hooks/use-toast';
 
 type CheckoutStep = 'information' | 'shipping' | 'payment';
 
@@ -12,9 +14,11 @@ const Checkout = () => {
   const { cart, cartTotal, clearCart } = useCart();
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   const [currentStep, setCurrentStep] = useState<CheckoutStep>('information');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi'>('card');
   const [formData, setFormData] = useState({
     email: user?.email || '',
     firstName: '',
@@ -67,18 +71,84 @@ const Checkout = () => {
     setIsProcessing(true);
     
     try {
-      // This would be replaced with actual Stripe integration
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // First, create the order in Supabase
+      const userId = user?.id;
+      if (!userId) throw new Error('User not authenticated');
       
-      // Clear cart and redirect to success page
-      clearCart();
-      navigate('/');
+      const order = await createOrder({
+        userId,
+        total: cartTotal + 5.99, // Adding shipping
+        items: cart.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity
+        }))
+      });
       
-      // Show success message
-      alert('Order placed successfully! (For demo purposes only)');
+      // Then initiate payment with the payment gateway
+      const paymentResult = await initiatePayment(
+        order.id,
+        order.total,
+        `Order #${order.order_number}`,
+        formData.email,
+        `${formData.firstName} ${formData.lastName}`
+      );
+      
+      // Handle the payment flow based on the gateway response
+      if (paymentResult.clientSecret) {
+        // For Stripe - redirect to Stripe Checkout or handle Elements
+        // This would be implemented using Stripe Elements in a real app
+        
+        // Mock successful payment for now
+        const paymentVerified = await verifyPayment(
+          'mock_payment_id',
+          order.id
+        );
+        
+        if (paymentVerified) {
+          // Clear cart and redirect to success page
+          clearCart();
+          toast({
+            title: "Order placed successfully!",
+            description: "Your order has been confirmed and will be shipped soon.",
+          });
+          navigate('/');
+        } else {
+          throw new Error('Payment verification failed');
+        }
+      } else if (paymentResult.orderId) {
+        // For Razorpay - redirect or open Razorpay checkout
+        // This would be implemented using Razorpay checkout in a real app
+        
+        // Mock successful payment for now
+        const paymentVerified = await verifyPayment(
+          'mock_payment_id',
+          order.id,
+          'mock_signature'
+        );
+        
+        if (paymentVerified) {
+          // Clear cart and redirect to success page
+          clearCart();
+          toast({
+            title: "Order placed successfully!",
+            description: "Your order has been confirmed and will be shipped soon.",
+          });
+          navigate('/');
+        } else {
+          throw new Error('Payment verification failed');
+        }
+      } else {
+        throw new Error('Unknown payment response type');
+      }
     } catch (error) {
       console.error('Payment error:', error);
-      alert('Payment failed. Please try again.');
+      toast({
+        title: "Payment failed",
+        description: "There was an error processing your payment. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -374,64 +444,124 @@ const Checkout = () => {
                     </span>
                   </div>
                   
-                  {/* Credit Card Info (This would be replaced with Stripe Elements) */}
-                  <div className="space-y-4">
-                    <div>
-                      <label htmlFor="cardName" className="block text-sm font-medium text-healing-dark mb-1">
-                        Name on Card
+                  {/* Payment Method Selection */}
+                  <div className="mb-6">
+                    <div className="text-sm font-medium text-healing-dark mb-3">Payment Method</div>
+                    <div className="space-y-3">
+                      <label className="flex items-center p-4 border border-healing-brown/30 rounded-md cursor-pointer bg-healing-beige/20">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="card"
+                          checked={paymentMethod === 'card'}
+                          onChange={() => setPaymentMethod('card')}
+                          className="h-4 w-4 text-healing-brown border-healing-brown/30 focus:ring-healing-pink"
+                        />
+                        <div className="ml-3 flex-grow">
+                          <span className="block text-sm font-medium text-healing-dark">Credit/Debit Card</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <div className="w-8 h-6 bg-gray-200 rounded flex items-center justify-center text-xs font-bold">Visa</div>
+                          <div className="w-8 h-6 bg-gray-200 rounded flex items-center justify-center text-xs font-bold">MC</div>
+                          <div className="w-8 h-6 bg-gray-200 rounded flex items-center justify-center text-xs font-bold">Amex</div>
+                        </div>
                       </label>
-                      <input
-                        type="text"
-                        id="cardName"
-                        className="w-full px-4 py-2 border border-healing-brown/30 rounded-md focus:outline-none focus:ring-1 focus:ring-healing-pink"
-                        placeholder="e.g. John Smith"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="cardNumber" className="block text-sm font-medium text-healing-dark mb-1">
-                        Card Number
+                      
+                      <label className="flex items-center p-4 border border-healing-brown/30 rounded-md cursor-pointer">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="upi"
+                          checked={paymentMethod === 'upi'}
+                          onChange={() => setPaymentMethod('upi')}
+                          className="h-4 w-4 text-healing-brown border-healing-brown/30 focus:ring-healing-pink"
+                        />
+                        <div className="ml-3 flex-grow">
+                          <span className="block text-sm font-medium text-healing-dark">UPI Payment</span>
+                        </div>
+                        <div className="w-8 h-6 bg-gray-200 rounded flex items-center justify-center text-xs font-bold">UPI</div>
                       </label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          id="cardNumber"
-                          className="w-full px-4 py-2 border border-healing-brown/30 rounded-md focus:outline-none focus:ring-1 focus:ring-healing-pink pr-10"
-                          placeholder="1234 5678 9012 3456"
-                          required
-                        />
-                        <CreditCard size={18} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-healing-dark/50" />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="expiry" className="block text-sm font-medium text-healing-dark mb-1">
-                          Expiry Date
-                        </label>
-                        <input
-                          type="text"
-                          id="expiry"
-                          className="w-full px-4 py-2 border border-healing-brown/30 rounded-md focus:outline-none focus:ring-1 focus:ring-healing-pink"
-                          placeholder="MM/YY"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="cvc" className="block text-sm font-medium text-healing-dark mb-1">
-                          CVC
-                        </label>
-                        <input
-                          type="text"
-                          id="cvc"
-                          className="w-full px-4 py-2 border border-healing-brown/30 rounded-md focus:outline-none focus:ring-1 focus:ring-healing-pink"
-                          placeholder="123"
-                          required
-                        />
-                      </div>
                     </div>
                   </div>
+                  
+                  {/* Card Info Fields (only shown when card is selected) */}
+                  {paymentMethod === 'card' && (
+                    <div className="space-y-4">
+                      <div>
+                        <label htmlFor="cardName" className="block text-sm font-medium text-healing-dark mb-1">
+                          Name on Card
+                        </label>
+                        <input
+                          type="text"
+                          id="cardName"
+                          className="w-full px-4 py-2 border border-healing-brown/30 rounded-md focus:outline-none focus:ring-1 focus:ring-healing-pink"
+                          placeholder="e.g. John Smith"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label htmlFor="cardNumber" className="block text-sm font-medium text-healing-dark mb-1">
+                          Card Number
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            id="cardNumber"
+                            className="w-full px-4 py-2 border border-healing-brown/30 rounded-md focus:outline-none focus:ring-1 focus:ring-healing-pink pr-10"
+                            placeholder="1234 5678 9012 3456"
+                            required
+                          />
+                          <CreditCard size={18} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-healing-dark/50" />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label htmlFor="expiry" className="block text-sm font-medium text-healing-dark mb-1">
+                            Expiry Date
+                          </label>
+                          <input
+                            type="text"
+                            id="expiry"
+                            className="w-full px-4 py-2 border border-healing-brown/30 rounded-md focus:outline-none focus:ring-1 focus:ring-healing-pink"
+                            placeholder="MM/YY"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="cvc" className="block text-sm font-medium text-healing-dark mb-1">
+                            CVC
+                          </label>
+                          <input
+                            type="text"
+                            id="cvc"
+                            className="w-full px-4 py-2 border border-healing-brown/30 rounded-md focus:outline-none focus:ring-1 focus:ring-healing-pink"
+                            placeholder="123"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* UPI ID Fields (only shown when UPI is selected) */}
+                  {paymentMethod === 'upi' && (
+                    <div className="space-y-4">
+                      <div>
+                        <label htmlFor="upiId" className="block text-sm font-medium text-healing-dark mb-1">
+                          UPI ID
+                        </label>
+                        <input
+                          type="text"
+                          id="upiId"
+                          className="w-full px-4 py-2 border border-healing-brown/30 rounded-md focus:outline-none focus:ring-1 focus:ring-healing-pink"
+                          placeholder="name@bank"
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
                   
                   {/* Billing Address Checkbox */}
                   <div className="mt-6">

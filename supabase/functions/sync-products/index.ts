@@ -1,5 +1,5 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from '@supabase/supabase-js';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,14 +17,15 @@ interface Product {
   featured: boolean;
 }
 
-serve(async (req) => {
+export async function handler(req: Request) {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const SHEETS_API_KEY = Deno.env.get('GOOGLE_SHEETS_API_KEY');
-    const SHEET_ID = Deno.env.get('GOOGLE_SHEETS_PRODUCT_SHEET_ID');
+    // Get secrets from environment
+    const SHEETS_API_KEY = process.env.GOOGLE_SHEETS_API_KEY;
+    const SHEET_ID = process.env.GOOGLE_SHEETS_PRODUCT_SHEET_ID;
 
     if (!SHEETS_API_KEY || !SHEET_ID) {
       throw new Error('Missing required environment variables');
@@ -73,4 +74,8 @@ serve(async (req) => {
       }
     );
   }
-});
+}
+
+// This is the adapter function that Supabase needs
+export const GET = handler;
+export const POST = handler;

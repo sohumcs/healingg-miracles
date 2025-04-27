@@ -1,7 +1,36 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-export async function createOrder(orderData: any) {
+export interface OrderItem {
+  order_id: string;
+  product_id: string;
+  product_name: string;
+  quantity: number;
+  price: number;
+}
+
+export interface Order {
+  id: string;
+  user_id: string;
+  order_number: string;
+  total: number;
+  status: 'processing' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
+  created_at?: string;
+  order_items?: OrderItem[];
+}
+
+export interface PaymentResult {
+  success: boolean;
+  orderId: string;
+  transactionId?: string;
+  message?: string;
+}
+
+export async function createOrder(orderData: {
+  userId: string;
+  total: number;
+  items: Array<{ id: string; name: string; price: number; quantity: number }>;
+}): Promise<Order> {
   try {
     // First create order in Supabase
     const { data: order, error: dbError } = await supabase
@@ -18,7 +47,7 @@ export async function createOrder(orderData: any) {
     if (dbError) throw dbError;
 
     // Create order items
-    const orderItems = orderData.items.map((item: any) => ({
+    const orderItems = orderData.items.map((item) => ({
       order_id: order.id,
       product_id: item.id,
       product_name: item.name,
@@ -49,7 +78,7 @@ export async function createOrder(orderData: any) {
   }
 }
 
-export async function fetchOrders(userId: string) {
+export async function fetchOrders(userId: string): Promise<Order[]> {
   try {
     const { data: orders, error: dbError } = await supabase
       .from('orders')
@@ -81,6 +110,20 @@ export async function fetchOrders(userId: string) {
     return updatedOrders;
   } catch (error) {
     console.error('Error fetching orders:', error);
+    throw error;
+  }
+}
+
+export async function updateOrderStatus(orderId: string, status: Order['status']): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('orders')
+      .update({ status })
+      .eq('id', orderId);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error updating order status:', error);
     throw error;
   }
 }
