@@ -1,63 +1,53 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { products, categories } from '@/data/products';
 import ProductCard from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
+import { fetchProducts } from '@/services/productService';
+import { useQuery } from '@tanstack/react-query';
+import { Loader2 } from 'lucide-react';
+import { categories } from '@/data/products';
 
 const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [filteredProducts, setFilteredProducts] = useState(products);
   const [activeCategory, setActiveCategory] = useState<string | null>(searchParams.get('category'));
-  const [isLoading, setIsLoading] = useState(false);
   const [sortOption, setSortOption] = useState('featured');
   
-  // Filter products by category from URL params
-  useEffect(() => {
-    const categoryParam = searchParams.get('category');
-    setActiveCategory(categoryParam);
-    
-    setIsLoading(true);
-    setTimeout(() => {
-      // Filter products by category if specified
-      if (categoryParam) {
-        setFilteredProducts(products.filter(product => product.category === categoryParam));
-      } else {
-        setFilteredProducts(products);
-      }
-      setIsLoading(false);
-    }, 300); // Short delay for smooth transition
-  }, [searchParams]);
+  const { data: products = [], isLoading, error } = useQuery({
+    queryKey: ['products'],
+    queryFn: fetchProducts
+  });
   
-  // Handle sorting
-  useEffect(() => {
-    setIsLoading(true);
+  // Filter and sort products
+  const getFilteredAndSortedProducts = () => {
+    let filtered = [...products];
     
-    let sorted = [...filteredProducts];
-    
-    switch (sortOption) {
-      case 'price-low':
-        sorted.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-high':
-        sorted.sort((a, b) => b.price - a.price);
-        break;
-      case 'name':
-        sorted.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case 'rating':
-        sorted.sort((a, b) => b.rating - a.rating);
-        break;
-      default:
-        // Default featured/relevance sort
-        sorted.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+    // Apply category filter
+    if (activeCategory) {
+      filtered = filtered.filter(product => product.category === activeCategory);
     }
     
-    setTimeout(() => {
-      setFilteredProducts(sorted);
-      setIsLoading(false);
-    }, 300);
-  }, [sortOption]);
+    // Apply sorting
+    switch (sortOption) {
+      case 'price-low':
+        filtered.sort((a, b) => a.price - b.price);
+        break;
+      case 'price-high':
+        filtered.sort((a, b) => b.price - a.price);
+        break;
+      case 'name':
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'rating':
+        filtered.sort((a, b) => b.rating - a.rating);
+        break;
+      default:
+        filtered.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+    }
+    
+    return filtered;
+  };
+  
+  const filteredProducts = getFilteredAndSortedProducts();
   
   // Handle category filter click
   const handleCategoryFilter = (categoryId: string | null) => {
@@ -67,6 +57,7 @@ const Shop = () => {
       searchParams.delete('category');
       setSearchParams(searchParams);
     }
+    setActiveCategory(categoryId);
   };
   
   // Handle sort change
@@ -135,16 +126,24 @@ const Shop = () => {
         
         {/* Products Grid */}
         <div className="min-h-[400px]">
-          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-opacity duration-300 ${
-            isLoading ? 'opacity-50' : 'opacity-100'
-          }`}>
-            {filteredProducts.map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-[400px]">
+              <Loader2 className="h-8 w-8 animate-spin text-healing-brown" />
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <p className="text-red-500">Error loading products. Please try again later.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProducts.map(product => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
           
           {/* Empty State */}
-          {filteredProducts.length === 0 && !isLoading && (
+          {!isLoading && !error && filteredProducts.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12">
               <svg className="w-16 h-16 text-healing-pink/50 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>

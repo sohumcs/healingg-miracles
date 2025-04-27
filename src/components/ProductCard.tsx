@@ -1,8 +1,18 @@
 
 import { Link } from 'react-router-dom';
-import { Product } from '@/data/products';
 import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  category: string;
+  image: string;
+  rating: number;
+  featured: boolean;
+}
 
 interface ProductCardProps {
   product: Product;
@@ -51,7 +61,7 @@ const ProductCard = ({ product, featured = false }: ProductCardProps) => {
           </h3>
           
           <p className="text-sm text-healing-dark/70 line-clamp-2">
-            {product.shortDescription}
+            {product.description}
           </p>
           
           <div className="pt-2 flex items-center justify-between">
