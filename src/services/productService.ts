@@ -3,21 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 
 export async function fetchProducts() {
   try {
-    // Get the Supabase URL from the client to construct the Edge Function URL
-    const supabaseUrl = supabase.supabaseUrl;
-    const response = await fetch(`${supabaseUrl}/functions/v1/sync-products`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${supabase.supabaseKey}`
-      }
+    const { data, error } = await supabase.functions.invoke('sync-products', {
+      method: 'GET'
     });
 
-    if (!response.ok) {
-      throw new Error(`Error fetching products: ${response.status}`);
+    if (error) {
+      throw new Error(`Error fetching products: ${error.message}`);
     }
 
-    const data = await response.json();
     return data.products;
   } catch (error) {
     console.error('Error fetching products:', error);

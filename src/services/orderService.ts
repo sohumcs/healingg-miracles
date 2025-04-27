@@ -33,18 +33,13 @@ export async function createOrder(orderData: any) {
     if (itemsError) throw itemsError;
 
     // Sync to Google Sheets
-    const supabaseUrl = supabase.supabaseUrl;
-    const response = await fetch(`${supabaseUrl}/functions/v1/sync-orders`, {
+    const { data, error } = await supabase.functions.invoke('sync-orders', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${supabase.supabaseKey}`
-      },
-      body: JSON.stringify({ order: { ...order, items: orderItems } })
+      body: { order: { ...order, items: orderItems } }
     });
 
-    if (!response.ok) {
-      throw new Error(`Error syncing order: ${response.status}`);
+    if (error) {
+      throw new Error(`Error syncing order: ${error.message}`);
     }
     
     return order;
@@ -68,20 +63,13 @@ export async function fetchOrders(userId: string) {
     if (dbError) throw dbError;
 
     // Sync with Google Sheets to get latest status
-    const supabaseUrl = supabase.supabaseUrl;
-    const response = await fetch(`${supabaseUrl}/functions/v1/sync-orders`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${supabase.supabaseKey}`
-      }
+    const { data, error } = await supabase.functions.invoke('sync-orders', {
+      method: 'GET'
     });
 
-    if (!response.ok) {
-      throw new Error(`Error fetching orders: ${response.status}`);
+    if (error) {
+      throw new Error(`Error fetching orders: ${error.message}`);
     }
-
-    const data = await response.json();
     
     // Update local orders with latest status from Google Sheets
     const sheetsOrders = data.orders;
