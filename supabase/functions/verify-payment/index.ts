@@ -1,5 +1,6 @@
 
-import { createClient } from '@supabase/supabase-js';
+// Fix import path for edge functions
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.21.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -73,10 +74,11 @@ async function verifyStripePayment(
   orderId: string
 ) {
   // Import Stripe dynamically
-  const stripe = require('stripe')(secretKey);
+  const stripe = await import('https://esm.sh/stripe@8.222.0');
+  const stripeClient = stripe.default(secretKey);
   
   // Retrieve the payment intent
-  const paymentIntent = await stripe.paymentIntents.retrieve(paymentId);
+  const paymentIntent = await stripeClient.paymentIntents.retrieve(paymentId);
   
   // Verify that the payment is successful and matches our order
   const success = 
@@ -98,11 +100,10 @@ async function verifyRazorpayPayment(
   signature: string
 ) {
   // Import crypto for signature verification
-  const crypto = require('crypto');
+  const crypto = await import('https://deno.land/std@0.170.0/node/crypto.ts');
   
   // Generate signature verification hash
-  const generatedSignature = crypto
-    .createHmac('sha256', keySecret)
+  const generatedSignature = crypto.createHmac('sha256', keySecret)
     .update(orderId + '|' + paymentId)
     .digest('hex');
   

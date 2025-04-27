@@ -1,5 +1,6 @@
 
-import { createClient } from '@supabase/supabase-js';
+// Fix import path for edge functions
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.21.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -31,6 +32,8 @@ export async function handler(req: Request) {
       throw new Error('Missing required environment variables');
     }
 
+    console.log('Fetching products with API Key and Sheet ID:', SHEETS_API_KEY?.substring(0, 3) + '...', SHEET_ID);
+
     // Fetch products from Google Sheets
     const response = await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Products!A2:H`,
@@ -42,10 +45,14 @@ export async function handler(req: Request) {
     );
 
     if (!response.ok) {
-      throw new Error('Failed to fetch products from Google Sheets');
+      const errorText = await response.text();
+      console.error('Google Sheets API error:', response.status, errorText);
+      throw new Error(`Failed to fetch products from Google Sheets: ${response.status} ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('Google Sheets API response:', JSON.stringify(data).substring(0, 100) + '...');
+
     const products: Product[] = data.values?.map((row: any[]) => ({
       id: row[0],
       name: row[1],
@@ -56,6 +63,8 @@ export async function handler(req: Request) {
       rating: parseFloat(row[6]),
       featured: row[7]?.toLowerCase() === 'true'
     })) || [];
+
+    console.log(`Processed ${products.length} products`);
 
     return new Response(
       JSON.stringify({ products }),

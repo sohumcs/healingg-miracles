@@ -71,7 +71,7 @@ export async function createOrder(orderData: {
       throw new Error(`Error syncing order: ${error.message}`);
     }
     
-    return order;
+    return order as Order; // Type assertion to ensure it matches the Order type
   } catch (error) {
     console.error('Error creating order:', error);
     throw error;
@@ -104,7 +104,17 @@ export async function fetchOrders(userId: string): Promise<Order[]> {
     const sheetsOrders = data.orders;
     const updatedOrders = orders.map(order => {
       const sheetOrder = sheetsOrders.find((so: any) => so.id === order.id);
-      return sheetOrder ? { ...order, status: sheetOrder.status } : order;
+      // Ensure the status is cast to the correct type
+      const status = sheetOrder?.status || order.status;
+      // Verify status is one of the allowed values
+      const validStatus = ['processing', 'paid', 'shipped', 'delivered', 'cancelled'].includes(status) 
+        ? status as Order['status']
+        : 'processing';
+      
+      return { 
+        ...order, 
+        status: validStatus 
+      } as Order;
     });
 
     return updatedOrders;

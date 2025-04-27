@@ -1,5 +1,6 @@
 
-import { createClient } from '@supabase/supabase-js';
+// Fix import path for edge functions
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.21.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -87,10 +88,11 @@ async function createStripePayment(
   customerName?: string
 ) {
   // Import Stripe dynamically
-  const stripe = require('stripe')(secretKey);
+  const stripe = await import('https://esm.sh/stripe@8.222.0');
+  const stripeClient = stripe.default(secretKey);
   
   // Create a payment intent
-  const paymentIntent = await stripe.paymentIntents.create({
+  const paymentIntent = await stripeClient.paymentIntents.create({
     amount,
     currency: 'usd', // This would be configurable
     description,
@@ -117,9 +119,9 @@ async function createRazorpayPayment(
   customerName?: string
 ) {
   // Import Razorpay dynamically
-  const Razorpay = require('razorpay');
+  const Razorpay = await import('https://esm.sh/razorpay@2.8.6');
   
-  const razorpay = new Razorpay({
+  const razorpay = new Razorpay.default({
     key_id: keyId,
     key_secret: keySecret,
   });
