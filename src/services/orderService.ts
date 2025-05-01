@@ -1,139 +1,70 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { Order } from '../integrations/supabase/types';
 
-export interface OrderItem {
-  order_id: string;
-  product_id: string;
-  product_name: string;
-  quantity: number;
-  price: number;
-}
+const API_URL = import.meta.env.DEV ? 'http://localhost:5000/api' : '/api';
 
-export interface Order {
-  id: string;
-  user_id: string;
-  order_number: string;
-  total: number;
-  status: 'processing' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
-  created_at?: string;
-  order_items?: OrderItem[];
-}
-
-export interface PaymentResult {
-  success: boolean;
-  orderId: string;
-  transactionId?: string;
-  message?: string;
+export async function getOrders(): Promise<Order[]> {
+  try {
+    const response = await fetch(`${API_URL}/orders`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch orders: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error loading orders:', error);
+    throw error;
+  }
 }
 
 export async function createOrder(orderData: {
-  userId: string;
+  user_id?: string;
   total: number;
-  items: Array<{ id: string; name: string; price: number; quantity: number }>;
+  shipping_address?: string;
+  items: Array<{
+    product_id: string;
+    quantity: number;
+    price: number;
+  }>;
 }): Promise<Order> {
   try {
-    // First create order in Supabase
-    const { data: order, error: dbError } = await supabase
-      .from('orders')
-      .insert([{
-        user_id: orderData.userId,
-        order_number: `ORD${Date.now()}`,
-        total: orderData.total,
-        status: 'processing'
-      }])
-      .select()
-      .single();
-
-    if (dbError) throw dbError;
-
-    // Create order items
-    const orderItems = orderData.items.map((item) => ({
-      order_id: order.id,
-      product_id: item.id,
-      product_name: item.name,
-      quantity: item.quantity,
-      price: item.price
-    }));
-
-    const { error: itemsError } = await supabase
-      .from('order_items')
-      .insert(orderItems);
-
-    if (itemsError) throw itemsError;
-
-    // Sync to Google Sheets
-    const { data, error } = await supabase.functions.invoke('sync-orders', {
+    const response = await fetch(`${API_URL}/orders`, {
       method: 'POST',
-      body: { order: { ...order, items: orderItems } }
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(orderData),
     });
-
-    if (error) {
-      throw new Error(`Error syncing order: ${error.message}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to create order: ${response.status}`);
     }
     
-    return order as Order; // Type assertion to ensure it matches the Order type
+    return await response.json();
   } catch (error) {
     console.error('Error creating order:', error);
     throw error;
   }
 }
 
-export async function fetchOrders(userId: string): Promise<Order[]> {
+export async function updateOrderStatus(orderId: string, status: Order['status']): Promise<Order> {
   try {
-    const { data: orders, error: dbError } = await supabase
-      .from('orders')
-      .select(`
-        *,
-        order_items (*)
-      `)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-
-    if (dbError) throw dbError;
-
-    // Sync with Google Sheets to get latest status
-    const { data, error } = await supabase.functions.invoke('sync-orders', {
-      method: 'GET'
+    const response = await fetch(`${API_URL}/orders/${orderId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status }),
     });
-
-    if (error) {
-      throw new Error(`Error fetching orders: ${error.message}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to update order status: ${response.status}`);
     }
     
-    // Update local orders with latest status from Google Sheets
-    const sheetsOrders = data.orders;
-    const updatedOrders = orders.map(order => {
-      const sheetOrder = sheetsOrders.find((so: any) => so.id === order.id);
-      // Ensure the status is cast to the correct type
-      const status = sheetOrder?.status || order.status;
-      // Verify status is one of the allowed values
-      const validStatus = ['processing', 'paid', 'shipped', 'delivered', 'cancelled'].includes(status) 
-        ? status as Order['status']
-        : 'processing';
-      
-      return { 
-        ...order, 
-        status: validStatus 
-      } as Order;
-    });
-
-    return updatedOrders;
+    return await response.json();
   } catch (error) {
-    console.error('Error fetching orders:', error);
-    throw error;
-  }
-}
-
-export async function updateOrderStatus(orderId: string, status: Order['status']): Promise<void> {
-  try {
-    const { error } = await supabase
-      .from('orders')
-      .update({ status })
-      .eq('id', orderId);
-
-    if (error) throw error;
-  } catch (error) {
-    console.error('Error updating order status:', error);
+    console.error(`Error updating order ${orderId} status:`, error);
     throw error;
   }
 }

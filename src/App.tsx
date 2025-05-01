@@ -1,55 +1,160 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Routes, Route } from "react-router-dom";
-import { CartProvider } from "./contexts/CartContext";
-import { AuthProvider } from "./contexts/AuthContext";
+import { lazy, Suspense } from 'react';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { Toaster } from '@/components/ui/toaster';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import Layout from "./components/Layout";
-import HomePage from "./pages/HomePage";
-import Shop from "./pages/Shop";
-import ProductPage from "./pages/ProductPage";
-import Cart from "./pages/Cart";
-import Checkout from "./pages/Checkout";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Account from "./pages/Account";
-import NotFound from "./pages/NotFound";
-import OrdersPage from "./pages/OrdersPage";
-import OrderTrackingPage from "./pages/OrderTrackingPage";
-import OrderCancelPage from "./pages/OrderCancelPage";
+// Layouts
+import Layout from './components/Layout';
 
-const queryClient = new QueryClient();
+// Pages
+const HomePage = lazy(() => import('./pages/HomePage'));
+const Shop = lazy(() => import('./pages/Shop'));
+const ProductPage = lazy(() => import('./pages/ProductPage'));
+const Cart = lazy(() => import('./pages/Cart'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const OrdersPage = lazy(() => import('./pages/OrdersPage'));
+const OrderTrackingPage = lazy(() => import('./pages/OrderTrackingPage'));
+const Account = lazy(() => import('./pages/Account'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <CartProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<HomePage />} />
-              <Route path="/shop" element={<Shop />} />
-              <Route path="/product/:id" element={<ProductPage />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/account" element={<Account />} />
-              <Route path="/orders" element={<OrdersPage />} />
-              <Route path="/orders/track/:trackingNumber" element={<OrderTrackingPage />} />
-              <Route path="/orders/cancel/:orderId" element={<OrderCancelPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
-        </TooltipProvider>
-      </CartProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+// Admin Pages
+const AdminProductsPage = lazy(() => import('./pages/AdminProductsPage'));
+const AdminOrdersPage = lazy(() => import('./pages/AdminOrdersPage'));
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <Layout />,
+    children: [
+      {
+        path: '',
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <HomePage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'shop',
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <Shop />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'products/:productId',
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProductPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'cart',
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <Cart />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'checkout',
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <Checkout />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'orders',
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <OrdersPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'order/:orderId',
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <OrderTrackingPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'login',
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <Login />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'register',
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <Register />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'account',
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <Account />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'admin/products',
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <AdminProductsPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'admin/orders',
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <AdminOrdersPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: '*',
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <NotFound />
+          </Suspense>
+        ),
+      },
+    ],
+  },
+]);
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+      <Toaster />
+    </QueryClientProvider>
+  );
+}
 
 export default App;

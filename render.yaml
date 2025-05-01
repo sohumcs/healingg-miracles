@@ -1,0 +1,10 @@
+
+services:
+  - type: web
+    name: healing-miracles
+    env: python
+    buildCommand: pip install -r requirements.txt && npm run build
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0

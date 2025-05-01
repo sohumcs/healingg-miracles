@@ -1,58 +1,68 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { User } from '../integrations/supabase/types';
 
-export async function signUp({ email, password, name }: { email: string; password: string; name: string }) {
+const API_URL = import.meta.env.DEV ? 'http://localhost:5000/api' : '/api';
+
+export async function login(email: string, password: string): Promise<User> {
   try {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
-        },
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ email, password }),
     });
 
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error('Error signing up:', error);
-    throw error;
-  }
-}
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Login failed');
+    }
 
-export async function signIn({ email, password }: { email: string; password: string }) {
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error('Error signing in:', error);
-    throw error;
-  }
-}
-
-export async function signOut() {
-  try {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-  } catch (error) {
-    console.error('Error signing out:', error);
-    throw error;
-  }
-}
-
-export async function getCurrentUser() {
-  try {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error) throw error;
+    const user = await response.json();
+    localStorage.setItem('user', JSON.stringify(user));
     return user;
   } catch (error) {
-    console.error('Error getting current user:', error);
+    console.error('Login error:', error);
     throw error;
   }
+}
+
+export async function register(email: string, password: string): Promise<User> {
+  try {
+    const response = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Registration failed');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Registration error:', error);
+    throw error;
+  }
+}
+
+export function getUser(): User | null {
+  const userStr = localStorage.getItem('user');
+  return userStr ? JSON.parse(userStr) : null;
+}
+
+export function logout(): void {
+  localStorage.removeItem('user');
+}
+
+export function isAuthenticated(): boolean {
+  return getUser() !== null;
+}
+
+export function isAdmin(): boolean {
+  const user = getUser();
+  return user !== null && user.is_admin === true;
 }

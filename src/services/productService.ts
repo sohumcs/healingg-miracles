@@ -1,59 +1,91 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { Product } from '@/data/products';
+import { Product } from '../integrations/supabase/types';
 
-export async function fetchProducts(): Promise<Product[]> {
+const API_URL = import.meta.env.DEV ? 'http://localhost:5000/api' : '/api';
+
+export async function getProducts(): Promise<Product[]> {
   try {
-    console.log('Fetching products from the edge function');
+    const response = await fetch(`${API_URL}/products`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch products: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error loading products:', error);
+    throw error;
+  }
+}
 
-    const { data, error } = await supabase.functions.invoke('sync-products', {
-      method: 'GET',
+export async function getProductById(productId: string): Promise<Product> {
+  try {
+    const response = await fetch(`${API_URL}/products/${productId}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch product: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`Error loading product ${productId}:`, error);
+    throw error;
+  }
+}
+
+export async function createProduct(product: Omit<Product, 'id'>): Promise<Product> {
+  try {
+    const response = await fetch(`${API_URL}/products`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(product),
     });
-
-    if (error) {
-      console.error('Error from sync-products function:', error);
-      throw new Error(error.message);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to create product: ${response.status}`);
     }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating product:', error);
+    throw error;
+  }
+}
 
-    if (!data || !data.products) {
-      console.error('No products data returned from function');
-      throw new Error('No products data returned from API');
+export async function updateProduct(id: string, product: Partial<Product>): Promise<Product> {
+  try {
+    const response = await fetch(`${API_URL}/products/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(product),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to update product: ${response.status}`);
     }
-
-    console.log(`Successfully fetched ${data.products.length} products`);
-    return data.products;
+    
+    return await response.json();
   } catch (error) {
-    console.error('Error fetching products:', error);
+    console.error(`Error updating product ${id}:`, error);
     throw error;
   }
 }
 
-export async function fetchProductById(id: string): Promise<Product | null> {
+export async function deleteProduct(id: string): Promise<void> {
   try {
-    const products = await fetchProducts();
-    return products.find(product => product.id === id) || null;
+    const response = await fetch(`${API_URL}/products/${id}`, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to delete product: ${response.status}`);
+    }
   } catch (error) {
-    console.error(`Error fetching product with id ${id}:`, error);
-    throw error;
-  }
-}
-
-export async function fetchProductsByCategory(category: string): Promise<Product[]> {
-  try {
-    const products = await fetchProducts();
-    return products.filter(product => product.category === category);
-  } catch (error) {
-    console.error(`Error fetching products in category ${category}:`, error);
-    throw error;
-  }
-}
-
-export async function fetchFeaturedProducts(): Promise<Product[]> {
-  try {
-    const products = await fetchProducts();
-    return products.filter(product => product.featured);
-  } catch (error) {
-    console.error('Error fetching featured products:', error);
+    console.error(`Error deleting product ${id}:`, error);
     throw error;
   }
 }
