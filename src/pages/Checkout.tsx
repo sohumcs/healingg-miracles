@@ -76,13 +76,12 @@ const Checkout = () => {
       if (!userId) throw new Error('User not authenticated');
       
       const order = await createOrder({
-        userId,
+        user_id: userId,
         total: cartTotal + 5.99, // Adding shipping
         items: cart.map(item => ({
-          id: item.id,
-          name: item.name,
+          product_id: item.id,
+          quantity: item.quantity,
           price: item.price,
-          quantity: item.quantity
         }))
       });
       

@@ -1,5 +1,5 @@
 
-import { Order } from '../integrations/supabase/types';
+import { Order } from '../types';
 
 const API_URL = import.meta.env.DEV ? 'http://localhost:5000/api' : '/api';
 

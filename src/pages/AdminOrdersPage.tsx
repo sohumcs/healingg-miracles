@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getOrders, updateOrderStatus } from '@/services/orderService';
 import { isAdmin } from '@/services/authService';
-import { Order } from '@/integrations/supabase/types';
+import { Order } from '@/types';
 import { ChevronDown, ExternalLink } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';

@@ -3,10 +3,11 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
-import { fetchProducts } from '@/services/productService';
+import { getProducts } from '@/services/productService';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { categories } from '@/data/products';
+import { Product } from '@/types';
 
 const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -15,12 +16,12 @@ const Shop = () => {
   
   const { data: products = [], isLoading, error } = useQuery({
     queryKey: ['products'],
-    queryFn: fetchProducts
+    queryFn: getProducts
   });
   
   // Filter and sort products
   const getFilteredAndSortedProducts = () => {
-    let filtered = [...products];
+    let filtered = [...products] as Product[];
     
     // Apply category filter
     if (activeCategory) {

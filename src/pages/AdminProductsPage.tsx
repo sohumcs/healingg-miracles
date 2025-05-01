@@ -25,7 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { getProducts, createProduct, updateProduct, deleteProduct } from '@/services/productService';
 import { isAdmin } from '@/services/authService';
-import { Product } from '@/integrations/supabase/types';
+import { Product } from '@/types';
 import { useForm } from 'react-hook-form';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
