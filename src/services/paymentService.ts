@@ -1,7 +1,4 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { updateOrderStatus } from './orderService';
-
 interface PaymentGatewayConfig {
   provider: 'stripe' | 'razorpay' | 'cashfree';
   apiKey: string;
@@ -76,18 +73,6 @@ export async function verifyPayment(
     // If payment was successful, update the order status
     if (success) {
       await updateOrderStatus(orderId, 'paid');
-      
-      // Sync to edge function/Google Sheets
-      await supabase.functions.invoke('sync-orders', {
-        method: 'POST',
-        body: { 
-          updateOrder: {
-            id: orderId,
-            status: 'paid',
-            paymentId
-          }
-        }
-      });
     }
     
     return success;
@@ -106,21 +91,13 @@ async function initiateStripePayment(
   customerName?: string
 ) {
   try {
-    // We'll implement this through a Supabase Edge Function
-    const { data, error } = await supabase.functions.invoke('create-payment', {
-      method: 'POST',
-      body: {
-        orderId,
-        amount: Math.round(amount * 100), // Stripe requires amount in cents
-        description,
-        customerEmail,
-        customerName
-      }
-    });
-
-    if (error) throw new Error(`Error creating payment: ${error.message}`);
-    
-    return data;
+    // Implementation would use direct Stripe API calls instead of edge functions
+    console.log('Initiating Stripe payment', { orderId, amount, description, customerEmail, customerName });
+    // Mock response for now
+    return {
+      clientSecret: 'mock_client_secret',
+      paymentId: 'mock_payment_id'
+    };
   } catch (error) {
     console.error('Error creating Stripe payment:', error);
     throw error;
@@ -129,18 +106,10 @@ async function initiateStripePayment(
 
 async function verifyStripePayment(paymentId: string, orderId: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase.functions.invoke('verify-payment', {
-      method: 'POST',
-      body: {
-        provider: 'stripe',
-        paymentId,
-        orderId
-      }
-    });
-
-    if (error) throw new Error(`Error verifying payment: ${error.message}`);
-    
-    return data.success;
+    // Implementation would use direct Stripe API calls
+    console.log('Verifying Stripe payment', { paymentId, orderId });
+    // Mock response for now
+    return true;
   } catch (error) {
     console.error('Error verifying Stripe payment:', error);
     return false;
@@ -156,22 +125,15 @@ async function initiateRazorpayPayment(
   customerName?: string
 ) {
   try {
-    // This will be implemented through a Supabase Edge Function
-    const { data, error } = await supabase.functions.invoke('create-payment', {
-      method: 'POST',
-      body: {
-        provider: 'razorpay',
-        orderId,
-        amount: Math.round(amount * 100), // Razorpay uses paise
-        description,
-        customerEmail,
-        customerName
-      }
-    });
-
-    if (error) throw new Error(`Error creating payment: ${error.message}`);
-    
-    return data;
+    // Implementation would use direct Razorpay API calls
+    console.log('Initiating Razorpay payment', { orderId, amount, description, customerEmail, customerName });
+    // Mock response for now
+    return {
+      orderId: 'mock_razorpay_order_id',
+      amount: amount,
+      currency: 'INR',
+      keyId: 'mock_key_id'
+    };
   } catch (error) {
     console.error('Error creating Razorpay payment:', error);
     throw error;
@@ -184,19 +146,10 @@ async function verifyRazorpayPayment(
   signature?: string
 ): Promise<boolean> {
   try {
-    const { data, error } = await supabase.functions.invoke('verify-payment', {
-      method: 'POST',
-      body: {
-        provider: 'razorpay',
-        paymentId,
-        orderId,
-        signature
-      }
-    });
-
-    if (error) throw new Error(`Error verifying payment: ${error.message}`);
-    
-    return data.success;
+    // Implementation would use direct Razorpay API calls
+    console.log('Verifying Razorpay payment', { paymentId, orderId, signature });
+    // Mock response for now
+    return true;
   } catch (error) {
     console.error('Error verifying Razorpay payment:', error);
     return false;
@@ -219,3 +172,6 @@ async function verifyCashfreePayment(paymentId: string, orderId: string): Promis
   // This will be similar to the other implementations
   return verifyStripePayment(paymentId, orderId);
 }
+
+// Import the necessary function to update order status
+import { updateOrderStatus } from './orderService';
