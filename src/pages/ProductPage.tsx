@@ -1,7 +1,5 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { products } from '@/data/products';
 import { useCart } from '@/contexts/CartContext';
 import ProductCard from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
@@ -11,32 +9,38 @@ const ProductPage = () => {
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [product, setProduct] = useState<any>(null);
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const { addToCart } = useCart();
-  
-  const product = products.find(p => p.id === id);
-  
-  // Get related products (same category)
-  const relatedProducts = product 
-    ? products
-        .filter(p => p.category === product.category && p.id !== product.id)
-        .slice(0, 3)
-    : [];
-  
+
   useEffect(() => {
-    if (!product) {
-      // Product not found, redirect to shop
-      navigate('/shop');
-      return;
-    }
-    
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, [product, navigate]);
-  
+    const fetchProduct = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/${id}`);
+        if (!response.ok) {
+          throw new Error('Product not found');
+        }
+        const data = await response.json();
+        setProduct(data);
+
+        // Fetch related products
+        const relatedResponse = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/api/products?category=${data.category ?? ''}`
+        );
+        const relatedData = await relatedResponse.json();
+        setRelatedProducts(
+          relatedData.filter((p: any) => p.id !== data.id).slice(0, 3)
+        );
+
+        setIsLoading(false);
+      } catch (error) {
+        navigate('/shop');
+      }
+    };
+
+    fetchProduct();
+  }, [id, navigate]);
+
   if (isLoading || !product) {
     return (
       <div className="min-h-screen pt-32 pb-16 flex items-center justify-center">
@@ -53,19 +57,37 @@ const ProductPage = () => {
       </div>
     );
   }
-  
+
   const handleAddToCart = () => {
     addToCart(product, quantity);
   };
-  
+
   const incrementQuantity = () => {
     if (quantity < 10) setQuantity(quantity + 1);
   };
-  
+
   const decrementQuantity = () => {
     if (quantity > 1) setQuantity(quantity - 1);
   };
-  
+
+  // Parse JSON strings for benefits and ingredients
+  const productBenefits = product.benefits ? JSON.parse(product.benefits) : [];
+  const productIngredients = product.ingredients ? JSON.parse(product.ingredients) : [];
+
+  const formatCategory = (category?: string | null) => {
+    if (!category) return 'Uncategorized';
+    switch (category.toLowerCase()) {
+      case 'bath':
+        return 'Bath Salt';
+      case 'gemstone':
+        return 'Gemstone';
+      case 'tealight':
+        return 'Tealight Holder';
+      default:
+        return category;
+    }
+  };
+
   return (
     <div className="min-h-screen pt-24 pb-16">
       <div className="container mx-auto max-w-6xl px-4">
@@ -83,28 +105,31 @@ const ProductPage = () => {
             <li className="text-healing-dark font-medium truncate">{product.name}</li>
           </ol>
         </nav>
-        
+
         {/* Product Details */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 mb-16 animate-fade-in">
           {/* Product Image */}
           <div className="aspect-square overflow-hidden rounded-lg shadow-md bg-white">
             <img 
-              src={product.image} 
+              src={
+                product.image_url
+                  ? `${import.meta.env.VITE_API_BASE_URL}${product.image_url}`
+                  : '/placeholder-product.jpg'
+              }
               alt={product.name} 
-              className="w-full h-full object-cover" 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
+              }}
             />
           </div>
-          
+
           {/* Product Info */}
           <div className="space-y-6">
             <div>
               <div className="mb-1">
                 <span className="text-sm uppercase tracking-wider text-healing-dark/70">
-                  {product.category === 'bath' 
-                    ? 'Bath Salt' 
-                    : product.category === 'gemstone' 
-                      ? 'Gemstone' 
-                      : 'Tealight Holder'}
+                  {formatCategory(product.category)}
                 </span>
               </div>
               <h1 className="font-playfair text-3xl font-medium text-healing-dark mb-4">{product.name}</h1>
@@ -126,18 +151,18 @@ const ProductPage = () => {
                 </span>
               </div>
               <p className="text-2xl font-medium text-healing-dark mb-4">
-                ${product.price.toFixed(2)}
+              ₹{product.price.toFixed(2)}
               </p>
               <p className="text-healing-dark/80 leading-relaxed">
                 {product.description}
               </p>
             </div>
-            
+
             {/* Product Features */}
             <div className="border-t border-b border-healing-beige py-6">
               <h3 className="font-playfair font-medium text-lg text-healing-dark mb-4">Benefits</h3>
               <ul className="grid grid-cols-2 gap-2">
-                {product.benefits.map((benefit, index) => (
+                {productBenefits.map((benefit: string, index: number) => (
                   <li key={index} className="flex items-center text-healing-dark/80">
                     <svg className="w-5 h-5 text-healing-pink mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
@@ -146,14 +171,14 @@ const ProductPage = () => {
                   </li>
                 ))}
               </ul>
-              
+
               {/* Additional Product Details */}
               <div className="mt-6 grid grid-cols-2 gap-4">
-                {product.ingredients && (
+                {productIngredients.length > 0 && (
                   <div>
                     <h4 className="text-sm font-medium text-healing-dark mb-1">Ingredients</h4>
                     <p className="text-sm text-healing-dark/70">
-                      {product.ingredients.join(', ')}
+                      {productIngredients.join(', ')}
                     </p>
                   </div>
                 )}
@@ -177,7 +202,7 @@ const ProductPage = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Add to Cart Section */}
             <div className="space-y-4">
               <div className="flex items-center space-x-4">
@@ -209,14 +234,14 @@ const ProductPage = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <section className="mt-16">
             <h2 className="font-playfair text-2xl font-semibold text-healing-dark mb-8">You May Also Like</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {relatedProducts.map(product => (
-                <ProductCard key={product.id} product={product} />
+              {relatedProducts.map((relatedProduct) => (
+                <ProductCard key={relatedProduct.id} product={relatedProduct} />
               ))}
             </div>
           </section>

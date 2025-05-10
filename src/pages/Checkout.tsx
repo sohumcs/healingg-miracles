@@ -308,6 +308,7 @@ const Checkout = () => {
                           className="w-full px-4 py-2 border border-healing-brown/30 rounded-md focus:outline-none focus:ring-1 focus:ring-healing-pink bg-white"
                           required
                         >
+                          <option value="India">India</option>
                           <option value="United States">United States</option>
                           <option value="Canada">Canada</option>
                           <option value="United Kingdom">United Kingdom</option>
@@ -394,7 +395,7 @@ const Checkout = () => {
                         <span className="block text-sm font-medium text-healing-dark">Standard Shipping</span>
                         <span className="block text-sm text-healing-dark/70">3-5 business days</span>
                       </div>
-                      <span className="text-healing-dark font-medium">$5.99</span>
+                      <span className="text-healing-dark font-medium">₹5.99</span>
                     </label>
                     
                     <label className="flex items-center p-4 border border-healing-brown/30 rounded-md cursor-pointer">
@@ -407,7 +408,7 @@ const Checkout = () => {
                         <span className="block text-sm font-medium text-healing-dark">Express Shipping</span>
                         <span className="block text-sm text-healing-dark/70">1-2 business days</span>
                       </div>
-                      <span className="text-healing-dark font-medium">$12.99</span>
+                      <span className="text-healing-dark font-medium">₹12.99</span>
                     </label>
                   </div>
                   
@@ -590,7 +591,7 @@ const Checkout = () => {
                       className="bg-healing-brown hover:bg-healing-dark text-white"
                       disabled={isProcessing}
                     >
-                      {isProcessing ? 'Processing...' : `Pay $${(cartTotal + 5.99).toFixed(2)}`}
+                      {isProcessing ? 'Processing...' : `Pay ₹${(cartTotal + 5.99).toFixed(2)}`}
                     </Button>
                   </div>
                 </div>
@@ -629,7 +630,7 @@ const Checkout = () => {
                       </p>
                     </div>
                     <span className="text-sm font-medium text-healing-dark">
-                      ${(item.price * item.quantity).toFixed(2)}
+                    ₹{(item.price * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 ))}
@@ -638,11 +639,11 @@ const Checkout = () => {
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between text-healing-dark/80">
                   <span>Subtotal</span>
-                  <span>${cartTotal.toFixed(2)}</span>
+                  <span>₹{cartTotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-healing-dark/80">
                   <span>Shipping</span>
-                  <span>$5.99</span>
+                  <span>₹5.99</span>
                 </div>
                 <div className="flex justify-between text-healing-dark/80">
                   <span>Taxes</span>
@@ -652,7 +653,7 @@ const Checkout = () => {
               
               <div className="border-t border-healing-beige pt-4 flex justify-between font-medium text-healing-dark">
                 <span>Total</span>
-                <span>${(cartTotal + 5.99).toFixed(2)}</span>
+                <span>₹{(cartTotal + 5.99).toFixed(2)}</span>
               </div>
             </div>
           </div>

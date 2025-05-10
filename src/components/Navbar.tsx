@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ShoppingBag, User } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import logo from '@/media/healing-logo.png'; // ✅ Import the logo image
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,46 +11,44 @@ const Navbar = () => {
   const { cartCount } = useCart();
   const { isAuthenticated } = useAuth();
   const location = useLocation();
-  
-  // Close mobile menu when route changes
+
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location]);
-  
-  // Add shadow to navbar when scrolled
+
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      setIsScrolled(window.scrollY > 10);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-  
-  // Navigation items
+
   const navItems = [
     { text: 'Home', path: '/' },
     { text: 'Shop', path: '/shop' },
   ];
 
   return (
-    <header 
+    <header
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 bg-white/95 backdrop-blur-sm ${
         isScrolled ? 'shadow-md py-3' : 'py-5'
       }`}
     >
       <div className="container px-4 md:px-6 mx-auto flex items-center justify-between">
-        {/* Logo */}
-        <Link to="/" className="flex items-center">
+        {/* Logo with text */}
+        <Link to="/" className="flex items-center space-x-2">
+          <img
+            src={logo}
+            alt="Healing Miracles Logo"
+            className="h-8 w-8 object-contain rounded-full"
+          />
           <h1 className="font-playfair text-2xl font-bold tracking-wider text-healing-dark">
-            Healingg<span className="text-healing-pink">Miracles</span>
+            Healingg<span className="text-pink-400">Miracles</span>
           </h1>
         </Link>
-        
+
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
           {navItems.map((item) => (
@@ -67,7 +65,7 @@ const Navbar = () => {
             </Link>
           ))}
         </nav>
-        
+
         {/* Desktop Icons */}
         <div className="hidden md:flex items-center space-x-6">
           <Link
@@ -77,7 +75,7 @@ const Navbar = () => {
           >
             <User size={20} />
           </Link>
-          
+
           <Link
             to="/cart"
             className="text-healing-dark/70 hover:text-healing-dark transition-colors relative"
@@ -91,7 +89,7 @@ const Navbar = () => {
             )}
           </Link>
         </div>
-        
+
         {/* Mobile Menu Button */}
         <div className="flex md:hidden items-center space-x-4">
           <Link
@@ -106,7 +104,7 @@ const Navbar = () => {
               </span>
             )}
           </Link>
-          
+
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="text-healing-dark p-1"
@@ -116,7 +114,7 @@ const Navbar = () => {
           </button>
         </div>
       </div>
-      
+
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="md:hidden bg-white/95 backdrop-blur-sm animate-fade-in">
@@ -127,7 +125,8 @@ const Navbar = () => {
                   key={item.path}
                   to={item.path}
                   className={`py-2 px-4 text-center text-healing-dark/80 hover:text-healing-dark hover:bg-healing-beige/50 rounded-md transition-colors ${
-                    location.pathname === item.path && 'font-medium text-healing-dark bg-healing-beige/30'
+                    location.pathname === item.path &&
+                    'font-medium text-healing-dark bg-healing-beige/30'
                   }`}
                 >
                   {item.text}

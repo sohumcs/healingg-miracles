@@ -135,7 +135,7 @@ const AdminOrdersPage = () => {
                       <TableCell>
                         {format(new Date(order.created_at), 'MMM d, yyyy')}
                       </TableCell>
-                      <TableCell>${parseFloat(order.total.toString()).toFixed(2)}</TableCell>
+                      <TableCell>₹{parseFloat(order.total.toString()).toFixed(2)}</TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(order.status)}>
                           {order.status.charAt(0).toUpperCase() + order.status.slice(1)}

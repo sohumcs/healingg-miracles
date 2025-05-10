@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '@/components/ProductCard';
@@ -6,8 +5,14 @@ import { Button } from '@/components/ui/button';
 import { getProducts } from '@/services/productService';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
-import { categories } from '@/data/products';
 import { Product } from '@/types';
+
+const categoryList = [
+  { id: 'bath', name: 'Bath Salts' },
+  { id: 'gemstone', name: 'Gemstones' },
+  { id: 'tealight', name: 'Tealight Holders' },
+  { id: 'trees', name: 'Trees' }
+];
 
 const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -19,18 +24,15 @@ const Shop = () => {
     queryFn: getProducts
   });
   
-  // Filter and sort products
   const getFilteredAndSortedProducts = () => {
     let filtered = [...products] as Product[];
-    
-    // Apply category filter
+
     if (activeCategory) {
       filtered = filtered.filter(product => 
-        product.category.toLowerCase() === activeCategory.toLowerCase()
+        (product.category || '').toLowerCase() === (activeCategory || '').toLowerCase()
       );
     }
-    
-    // Apply sorting
+
     switch (sortOption) {
       case 'price-low':
         filtered.sort((a, b) => a.price - b.price);
@@ -47,13 +49,12 @@ const Shop = () => {
       default:
         filtered.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
     }
-    
+
     return filtered;
   };
-  
+
   const filteredProducts = getFilteredAndSortedProducts();
-  
-  // Handle category filter click
+
   const handleCategoryFilter = (categoryId: string | null) => {
     if (categoryId) {
       setSearchParams({ category: categoryId });
@@ -63,34 +64,29 @@ const Shop = () => {
     }
     setActiveCategory(categoryId);
   };
-  
-  // Handle sort change
+
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSortOption(e.target.value);
   };
 
   useEffect(() => {
-    // Update category from URL if it changes
     const category = searchParams.get('category');
     if (category !== activeCategory) {
       setActiveCategory(category);
     }
   }, [searchParams, activeCategory]);
-  
+
   return (
     <div className="min-h-screen pt-24 pb-16">
       <div className="container mx-auto max-w-6xl px-4">
-        {/* Page Header */}
         <div className="py-8 text-center">
           <h1 className="font-playfair text-3xl md:text-4xl font-semibold mb-3 text-healing-dark">Shop Our Collection</h1>
           <p className="text-healing-dark/70 max-w-xl mx-auto">
-            Discover our carefully curated selection of bath salts, gemstones, and tealight holders to enhance your wellness journey.
+            Discover our carefully curated selection of bath salts, gemstones, tealight holders, and trees to enhance your wellness journey.
           </p>
         </div>
         
-        {/* Filters & Sorting */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-8 space-y-4 sm:space-y-0">
-          {/* Categories */}
           <div className="flex items-center space-x-2 overflow-x-auto pb-2 w-full sm:w-auto">
             <Button
               variant={!activeCategory ? "default" : "outline"}
@@ -102,7 +98,7 @@ const Shop = () => {
               All
             </Button>
             
-            {categories.map((category) => (
+            {categoryList.map((category) => (
               <Button
                 key={category.id}
                 variant={activeCategory === category.id ? "default" : "outline"}
@@ -116,7 +112,6 @@ const Shop = () => {
             ))}
           </div>
           
-          {/* Sort */}
           <div className="flex items-center space-x-2 w-full sm:w-auto">
             <label htmlFor="sort" className="text-sm text-healing-dark/80">
               Sort by:
@@ -136,7 +131,6 @@ const Shop = () => {
           </div>
         </div>
         
-        {/* Products Grid */}
         <div className="min-h-[400px]">
           {isLoading ? (
             <div className="flex items-center justify-center h-[400px]">
@@ -153,8 +147,7 @@ const Shop = () => {
               ))}
             </div>
           )}
-          
-          {/* Empty State */}
+
           {!isLoading && !error && filteredProducts.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12">
               <svg className="w-16 h-16 text-healing-pink/50 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,4 +1,4 @@
-
+import fp1 from "../media/fp1.jpeg"
 export interface Product {
   id: string;
   name: string;
@@ -25,7 +25,7 @@ export const products: Product[] = [
     description: "Our Calming Lavender Bath Salt is a rejuvenating blend of pure Himalayan salt infused with organic lavender essential oil. This luxurious bath salt helps to relieve stress, promote relaxation, and soothe tired muscles while nourishing your skin with rich minerals. For the ultimate self-care experience, dissolve a generous handful in warm bath water and immerse yourself in tranquility.",
     shortDescription: "Organic lavender-infused Himalayan salt for deep relaxation",
     price: 24.99,
-    image: "https://images.unsplash.com/photo-1614806687902-ag416800791a?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8YmF0aCUyMHNhbHR8ZW58MHx8MHx8fDA%3D",
+    image: fp1,
     featured: true,
     benefits: ["Stress relief", "Muscle relaxation", "Skin nourishment", "Improved sleep quality"],
     ingredients: ["Himalayan Pink Salt", "Organic Lavender Essential Oil", "Dead Sea Minerals", "Dried Lavender Buds"],
@@ -36,7 +36,7 @@ export const products: Product[] = [
   },
   {
     id: "gemstone-amethyst-1",
-    name: "Amethyst Healing Crystal",
+    name: "Azyorite Gemstone Bracelets",
     category: "gemstone",
     description: "Our premium Amethyst crystal is thoughtfully sourced and carefully selected for its vibrant purple hue and natural energy. Known as a powerful protective stone, Amethyst helps purify the mind and clear negative thoughts. Place in your home for balanced energy or carry with you for continuous protection and mindfulness throughout your day.",
     shortDescription: "Premium grade amethyst for protection and spiritual awareness",

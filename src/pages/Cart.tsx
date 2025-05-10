@@ -92,7 +92,7 @@ const Cart = () => {
                       {/* Price */}
                       <div className="sm:text-center mb-2 sm:mb-0">
                         <span className="sm:hidden text-sm text-healing-dark/70">Price: </span>
-                        <span className="text-healing-dark">${item.price.toFixed(2)}</span>
+                        <span className="text-healing-dark">₹{item.price.toFixed(2)}</span>
                       </div>
                       
                       {/* Quantity */}
@@ -126,7 +126,7 @@ const Cart = () => {
                         <span className="sm:hidden text-sm text-healing-dark/70">Total: </span>
                         <div className="flex items-center">
                           <span className="text-healing-dark font-medium">
-                            ${(item.price * item.quantity).toFixed(2)}
+                          ₹{(item.price * item.quantity).toFixed(2)}
                           </span>
                           <button
                             onClick={() => handleRemoveItem(item.id)}
@@ -164,7 +164,7 @@ const Cart = () => {
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-healing-dark/80">
                     <span>Subtotal</span>
-                    <span>${cartTotal.toFixed(2)}</span>
+                    <span>₹{cartTotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-healing-dark/80">
                     <span>Shipping</span>
@@ -172,7 +172,7 @@ const Cart = () => {
                   </div>
                   <div className="border-t border-healing-beige my-3 pt-3 flex justify-between font-medium text-healing-dark">
                     <span>Total</span>
-                    <span>${cartTotal.toFixed(2)}</span>
+                    <span>₹{cartTotal.toFixed(2)}</span>
                   </div>
                 </div>
                 

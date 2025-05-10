@@ -1,20 +1,51 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { products } from '@/data/products';
 import ProductCard from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
+import herosection from '../media/herosection.jpeg';
+import bathSaltImg from '../media/bathsalt.jpeg';
+import gemstoneImg from '../media/gemstone.jpeg';
+import tealightImg from '../media/candle.jpeg';
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  category?: string | null;
+  image_url?: string | null;
+  rating: number;
+  featured: boolean;
+  stock?: number;
+}
 
 const HomePage = () => {
-  const featuredProducts = products.filter(product => product.featured).slice(0, 3);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
   const { scrollY } = useScroll();
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
   const scale = useTransform(scrollY, [0, 300], [1, 0.9]);
 
   useEffect(() => {
-    // Trigger animation after component mounts
+    const fetchFeatured = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products`);
+        const data = await response.json();
+        const featured = data.filter((product: Product) => product.featured).slice(0, 3);
+        setFeaturedProducts(featured);
+      } catch (error) {
+        console.error("Failed to fetch featured products", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeatured();
+  }, []);
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(true);
     }, 100);
@@ -29,9 +60,7 @@ const HomePage = () => {
 
   return (
     <div className="flex flex-col">
-      {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        {/* Background Image with Parallax Effect */}
         <motion.div 
           className="absolute inset-0 z-0" 
           style={{ 
@@ -42,37 +71,17 @@ const HomePage = () => {
             scale,
           }}
         />
-        
-        {/* Floating decorative elements */}
         {floatingElements.map(element => (
           <motion.div 
             key={element.id}
-            className="absolute z-10 w-16 h-16 md:w-24 md:h-24 rounded-full overflow-hidden"
+            className="absolute inset-0 z-10 flex items-center justify-center"
             initial={{ opacity: 0 }}
-            animate={{ 
-              opacity: 0.8, 
-              x: element.x, 
-              y: element.y,
-              transition: { 
-                x: { duration: element.duration, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" },
-                y: { duration: element.duration * 1.2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" },
-                opacity: { duration: 1.5 }
-              }
-            }}
-            style={{ 
-              left: `${20 + element.id * 25}%`,
-              top: `${30 + element.id * 15}%`
-            }}
+            animate={{ opacity: 0.8 }}
+            transition={{ duration: 1.5 }}
           >
-            <img 
-              src={element.image} 
-              alt="Healing element" 
-              className="w-full h-full object-cover"
-            />
+            <img src={herosection} alt="Healing element" className="w-full h-full object-cover" />
           </motion.div>
         ))}
-        
-        {/* Content */}
         <div className="container mx-auto px-4 z-20">
           <motion.div 
             className="max-w-xl mx-auto text-center text-white"
@@ -86,7 +95,7 @@ const HomePage = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5 }}
             >
-              Elevate Your <span className="text-healing-pink">Spiritual</span> Wellness Journey
+              Elevate Your <span className="text-pink-400">Spiritual</span> Wellness Journey
             </motion.h1>
             <motion.p 
               className="text-lg md:text-xl text-white/90 max-w-lg mx-auto mb-8 drop-shadow-md"
@@ -123,8 +132,6 @@ const HomePage = () => {
             </motion.div>
           </motion.div>
         </div>
-        
-        {/* Scroll indicator */}
         <motion.div 
           className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20"
           initial={{ opacity: 0 }}
@@ -141,14 +148,13 @@ const HomePage = () => {
         </motion.div>
       </section>
 
-      {/* Categories Section */}
       <section className="py-16 bg-healing-beige/30 px-4">
         <div className="container mx-auto max-w-6xl">
           <motion.div 
             className="text-center max-w-xl mx-auto mb-12"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
+            viewport= {{ once: true, margin: "-100px" }}
             transition={{ duration: 0.7 }}
           >
             <h2 className="font-playfair text-3xl font-semibold text-healing-dark mb-4">
@@ -164,19 +170,19 @@ const HomePage = () => {
               {
                 title: "Bath Salts",
                 description: "Mineral-rich blends for relaxation and renewal",
-                image: "https://images.unsplash.com/photo-1614806687902-ag416800791a?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8YmF0aCUyMHNhbHR8ZW58MHx8MHx8fDA%3D",
+                image: bathSaltImg,
                 link: "/shop?category=bath"
               },
               {
                 title: "Healing Crystals",
                 description: "Powerful gemstones for energy and balance",
-                image: "https://images.unsplash.com/photo-1596554847864-e4e334678bd1?q=80&w=1374&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+                image: gemstoneImg,
                 link: "/shop?category=gemstone"
               },
               {
                 title: "Tealight Holders",
                 description: "Beautiful pieces for ambient illumination",
-                image: "https://images.unsplash.com/photo-1631567473314-e0b5702f422f?q=80&w=1372&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+                image: tealightImg,
                 link: "/shop?category=tealight"
               }
             ].map((category, index) => (
@@ -187,10 +193,7 @@ const HomePage = () => {
                 viewport={{ once: true, margin: "-100px" }}
                 transition={{ duration: 0.7, delay: index * 0.2 }}
               >
-                <Link 
-                  to={category.link}
-                  className="group block"
-                >
+                <Link to={category.link} className="group block">
                   <motion.div 
                     className="bg-white rounded-lg shadow-sm overflow-hidden"
                     whileHover={{ y: -8, boxShadow: "0 15px 30px rgba(0,0,0,0.1)" }}
@@ -225,7 +228,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Featured Products */}
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-6xl">
           <motion.div 
@@ -246,112 +248,32 @@ const HomePage = () => {
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-healing-brown group-hover:w-full transition-all duration-300"></span>
             </Link>
           </motion.div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-            {featuredProducts.map((product, index) => (
-              <motion.div 
-                key={product.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.7, delay: index * 0.2 }}
-                whileHover={{ y: -8 }}
-              >
-                <ProductCard product={product} featured />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* Brand Story */}
-      <section className="py-16 bg-healing-beige/30 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.7 }}
-            >
-              <div className="relative">
-                <motion.img 
-                  src="https://images.unsplash.com/photo-1520473378652-85d9c4aee6cf?q=80&w=1469&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
-                  alt="Our story"
-                  className="rounded-lg shadow-md w-full h-auto" 
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.5 }}
-                />
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <span className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-healing-brown"></span>
+            </div>
+          ) : featuredProducts.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+              {featuredProducts.map((product, index) => (
                 <motion.div 
-                  className="absolute -bottom-6 -right-6 h-24 w-24 bg-healing-pink rounded-full hidden md:block"
-                  animate={{ rotate: [0, 360] }}
-                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                ></motion.div>
-              </div>
-            </motion.div>
-            <motion.div
-              className="space-y-6"
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.7 }}
-            >
-              <h2 className="font-playfair text-3xl font-semibold text-healing-dark">
-                Our Healing Journey
-              </h2>
-              <p className="text-healing-dark/80 leading-relaxed">
-                HealinggMiracles began as a personal quest for holistic wellness. After discovering the transformative 
-                effects of natural elements, we dedicated ourselves to sharing these healing gifts with others.
-              </p>
-              <p className="text-healing-dark/80 leading-relaxed">
-                Each product is thoughtfully crafted to provide a sanctuary of calm and renewal in our often chaotic world. 
-                From mineral-rich bath salts to energy-balancing gemstones and ambiance-setting tealight holders, our collection 
-                is designed to nurture your mind, body, and spirit.
-              </p>
-              <div className="pt-2">
-                <Link to="/shop">
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button variant="outline" className="border-healing-brown/30 hover:bg-healing-beige hover:text-healing-dark hover:border-healing-brown/50">
-                      Explore Our Story
-                    </Button>
-                  </motion.div>
-                </Link>
-              </div>
-            </motion.div>
-          </div>
+                  key={product.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-100px" }}
+                  transition={{ duration: 0.7, delay: index * 0.2 }}
+                  whileHover={{ y: -8 }}
+                >
+                  <ProductCard product={product} featured />
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center text-healing-dark/70 py-8">
+              No featured products available right now.
+            </div>
+          )}
         </div>
-      </section>
-
-      {/* Newsletter */}
-      <section className="py-16 px-4">
-        <motion.div 
-          className="container mx-auto max-w-lg text-center"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.7 }}
-        >
-          <h2 className="font-playfair text-3xl font-semibold text-healing-dark mb-4">
-            Join Our Community
-          </h2>
-          <p className="text-healing-dark/70 mb-8">
-            Subscribe to receive updates on new products, special offers, and healing rituals.
-          </p>
-          <form className="flex flex-col sm:flex-row gap-2">
-            <motion.input
-              type="email"
-              placeholder="Your email address"
-              className="flex-grow px-4 py-3 rounded-md border border-healing-brown/30 focus:outline-none focus:ring-2 focus:ring-healing-pink"
-              required
-              whileFocus={{ scale: 1.02, boxShadow: "0 0 0 2px #FFDEE2" }}
-            />
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button className="bg-healing-brown hover:bg-healing-dark text-white shrink-0 w-full sm:w-auto">
-                Subscribe
-              </Button>
-            </motion.div>
-          </form>
-        </motion.div>
       </section>
     </div>
   );

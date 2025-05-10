@@ -133,7 +133,7 @@ const Account = () => {
                           <div key={order.id} className="mb-4 last:mb-0 text-left p-3 bg-white rounded-md shadow-sm">
                             <div className="flex justify-between mb-2">
                               <span className="text-sm text-healing-dark/70">Order #{order.id}</span>
-                              <span className="text-sm font-medium">${order.total.toFixed(2)}</span>
+                              <span className="text-sm font-medium">₹{order.total.toFixed(2)}</span>
                             </div>
                             <div className="text-sm text-healing-dark/70">
                               {new Date(order.date).toLocaleDateString()}
@@ -158,7 +158,7 @@ const Account = () => {
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="font-medium text-healing-dark">${order.total.toFixed(2)}</p>
+                            <p className="font-medium text-healing-dark">₹{order.total.toFixed(2)}</p>
                             <span className={`inline-block px-3 py-1 rounded-full text-sm
                               ${order.status === 'processing' ? 'bg-blue-100 text-blue-800' : 
                                 order.status === 'dispatched' ? 'bg-amber-100 text-amber-800' :
@@ -177,7 +177,7 @@ const Account = () => {
                                 <span className="text-healing-dark/70 text-sm mr-2">{item.quantity}x</span>
                                 <span className="text-healing-dark">{item.name}</span>
                               </div>
-                              <span className="text-healing-dark font-medium">${item.price.toFixed(2)}</span>
+                              <span className="text-healing-dark font-medium">₹{item.price.toFixed(2)}</span>
                             </div>
                           ))}
                         </div>
@@ -221,7 +221,7 @@ const Account = () => {
                         <div key={item.id} className="bg-white rounded-lg shadow-sm p-4">
                           <img src={item.image} alt={item.name} className="w-full h-48 object-cover rounded-md mb-4" />
                           <h4 className="font-medium text-healing-dark mb-2">{item.name}</h4>
-                          <p className="text-healing-dark/70 mb-4">${item.price.toFixed(2)}</p>
+                          <p className="text-healing-dark/70 mb-4">₹{item.price.toFixed(2)}</p>
                           <div className="flex gap-2">
                             <Button size="sm" className="w-full bg-healing-brown hover:bg-healing-dark text-white">
                               Add to Cart

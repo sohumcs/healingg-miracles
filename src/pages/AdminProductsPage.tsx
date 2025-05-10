@@ -221,7 +221,7 @@ const AdminProductsPage = () => {
                         )}
                       </TableCell>
                       <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell>${product.price.toFixed(2)}</TableCell>
+                      <TableCell>₹{product.price.toFixed(2)}</TableCell>
                       <TableCell>{product.category}</TableCell>
                       <TableCell>{product.featured ? 'Yes' : 'No'}</TableCell>
                       <TableCell className="space-x-2">

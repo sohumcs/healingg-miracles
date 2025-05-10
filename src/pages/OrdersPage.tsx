@@ -150,7 +150,7 @@ const OrdersPage = () => {
                           <span className="text-healing-dark/70 text-sm mr-2">{item.quantity}x</span>
                           <span className="text-healing-dark">{item.name}</span>
                         </div>
-                        <span className="text-healing-dark font-medium">${item.price.toFixed(2)}</span>
+                        <span className="text-healing-dark font-medium">₹{item.price.toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
@@ -158,7 +158,7 @@ const OrdersPage = () => {
                 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                   <div className="text-healing-dark">
-                    <span className="font-medium">Total:</span> ${order.total.toFixed(2)}
+                    <span className="font-medium">Total:</span> ₹{order.total.toFixed(2)}
                   </div>
                   
                   <div className="flex gap-3">
