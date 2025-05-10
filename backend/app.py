@@ -87,6 +87,12 @@ class OrderItem(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+@app.route('/init-db')
+def init_db():
+    db.create_all()
+    return "Database initialized!"
+
+
 @app.route('/uploads/products/<path:filename>')
 def serve_product_image(filename):
     uploads_dir = os.path.join(app.root_path, 'static', 'uploads', 'products')
