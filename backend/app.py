@@ -13,16 +13,20 @@ import razorpay
 from wtforms import SelectField
 from flask_admin.base import MenuLink
 from PIL import Image, ImageOps
+from dotenv import load_dotenv
+
+load_dotenv('.env.local')
+
 
 app = Flask(__name__, static_folder='./dist', template_folder='templates')
 CORS(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ecommerce.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'healinggmiracles@123'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads', 'products')
-app.config['RAZORPAY_KEY_ID'] = 'your-razorpay-key-id'
-app.config['RAZORPAY_KEY_SECRET'] = 'your-razorpay-key-secret'
+app.config['RAZORPAY_KEY_ID'] = os.getenv('RAZORPAY_KEY_ID')
+app.config['RAZORPAY_KEY_SECRET'] = os.getenv('RAZORPAY_KEY_SECRET')
 app.config['FLASK_ADMIN_SWATCH'] = 'materia'
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)

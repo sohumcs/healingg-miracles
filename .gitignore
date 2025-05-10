@@ -7,20 +7,33 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# Dependencies
+node_modules/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.env
+.env.local
+.vscode/
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-.vercel
-.env.local
+
+# Frontend builds
+dist/
+dist-ssr/
+.vite/
+
+# Vercel & Render config
+.vercel/
+render.yaml
+
+# SQLite DB
+instance/
+*.db
+*.sqlite3

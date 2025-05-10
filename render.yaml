@@ -1,10 +1,28 @@
-
 services:
   - type: web
-    name: healing-miracles
+    name: healingg-backend
     env: python
-    buildCommand: pip install -r requirements.txt && npm run build
-    startCommand: gunicorn app:app
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.9.0
+      - key: SECRET_KEY
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+    buildFilter:
+      paths:
+        - backend/**
+
+  - type: static
+    name: healingg-frontend
+    env: static
+    buildCommand: "npm run build"
+    staticPublishPath: "dist"
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+    buildFilter:
+      paths:
+        - frontend/**
